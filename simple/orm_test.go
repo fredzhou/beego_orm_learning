@@ -6,15 +6,7 @@ import (
 	"testing"
 )
 
-type MyTestingT testing.T
-
 var o orm.Ormer
-
-func AssertEqual(exp interface{}, act interface{}, t *testing.T) {
-    if exp != act {
-        t.Error("expected ", exp, " actual ", act)
-    }
-}
 
 func init() {
 	o = orm.NewOrm()
@@ -24,20 +16,49 @@ func init() {
 func Test_Insert(t *testing.T) {
 	profile := new(Profile)
 	profile.Age = 30
+	_, err := o.Insert(profile)
+	AssertEqual(nil, err, t)
 
 	user := new(User)
 	user.Profile = profile
 	user.Name = "slene"
 
-	_, err := o.Insert(profile)
-    AssertEqual(nil, err, t)
 	_, err = o.Insert(user)
-    AssertEqual(nil, err, t)
+	AssertEqual(nil, err, t)
 }
 
 func Test_Read(t *testing.T) {
-    user := User{Id: 1}
+	user := User{Id: 1}
+	err := o.Read(&user)
+	AssertEqual(nil, err, t)
+	AssertEqual("slene", user.Name, t)
+
+    profile := Profile{Id: 1}
+    err = o.Read(&profile)
+    AssertEqual(int16(30), profile.Age, t)
+
+	//query with non-primary key
+	user = User{Name: "slene"}
+	err = o.Read(&user, "Name")
+	AssertEqual(nil, err, t)
+	AssertEqual(1, user.Id, t)
+}
+
+func Test_Update(t *testing.T) {
+	user := User{Id: 1}
     err := o.Read(&user)
     AssertEqual(nil, err, t)
     AssertEqual("slene", user.Name, t)
+
+    user.Name = "Fred"
+    _, err = o.Update(&user)
+    AssertEqual(nil, err, t)
+
+    user1 := User{Id: 1}
+    err = o.Read(&user1)
+    AssertEqual("Fred", user1.Name, t)
+
+    //teardown
+    user1.Name = "slene"
+    o.Update(&user1)
 }
