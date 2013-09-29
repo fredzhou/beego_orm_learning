@@ -15,14 +15,14 @@ func init() {
 
 func Test_Insert(t *testing.T) {
 	profile := new(Profile)
-	profile.Age = 30
-	_, err := o.Insert(profile)
-	AssertEqual(nil, err, t)
-
 	user := new(User)
+	profile.Age = 30
+    profile.User = user
 	user.Profile = profile
 	user.Name = "slene"
 
+	_, err := o.Insert(profile)
+	AssertEqual(nil, err, t)
 	_, err = o.Insert(user)
 	AssertEqual(nil, err, t)
 }
@@ -33,9 +33,7 @@ func Test_Read(t *testing.T) {
 	AssertEqual(nil, err, t)
 	AssertEqual("slene", user.Name, t)
 
-    profile := Profile{Id: 1}
-    err = o.Read(&profile)
-    AssertEqual(int16(30), profile.Age, t)
+	//AssertEqual(int16(30), user.Profile.Age, t)
 
 	//query with non-primary key
 	user = User{Name: "slene"}
@@ -46,19 +44,36 @@ func Test_Read(t *testing.T) {
 
 func Test_Update(t *testing.T) {
 	user := User{Id: 1}
-    err := o.Read(&user)
-    AssertEqual(nil, err, t)
-    AssertEqual("slene", user.Name, t)
+	err := o.Read(&user)
+	AssertEqual(nil, err, t)
+	AssertEqual("slene", user.Name, t)
 
-    user.Name = "Fred"
-    _, err = o.Update(&user)
-    AssertEqual(nil, err, t)
+	user.Name = "Fred"
+	_, err = o.Update(&user)
+	AssertEqual(nil, err, t)
 
-    user1 := User{Id: 1}
-    err = o.Read(&user1)
-    AssertEqual("Fred", user1.Name, t)
+	user1 := User{Id: 1}
+	err = o.Read(&user1)
+	AssertEqual("Fred", user1.Name, t)
 
-    //teardown
-    user1.Name = "slene"
-    o.Update(&user1)
+	//teardown
+	user1.Name = "slene"
+	o.Update(&user1)
+}
+
+func Test_Delete(t *testing.T) {
+	user := &User{Id: 1}
+	err := o.Read(user)
+	AssertEqual(nil, err, t)
+	profile := &Profile{Id: 1}
+	err = o.Read(profile)
+	AssertEqual(nil, err, t)
+
+	o.Delete(profile)
+
+	err = o.Read(profile)
+	AssertEqual(true, nil != err, t)
+    //verify on_delete(cascade)
+	err = o.Read(user)
+	AssertEqual(true, nil != err, t)
 }

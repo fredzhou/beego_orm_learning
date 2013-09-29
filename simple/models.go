@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	_ "github.com/lib/pq"
 )
 
 type User struct {
 	Id      int
 	Name    string
-	Profile *Profile `orm:"rel(one)"` // OneToOne relation
+	Profile *Profile `orm:"rel(one);on_delete(cascade)"` // OneToOne relation
 }
 
 type Profile struct {
@@ -24,7 +25,7 @@ func init() {
 
 	name := "default"
 
-	force_drop_table := false
+	force_drop_table := true
 
 	verbose := true
 
